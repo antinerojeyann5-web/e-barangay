@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barangay Announcements - e-Barangay</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; background-color: #f4f7f6; }
+        nav { background-color: #003366; padding: 15px; color: white; display: flex; justify-content: space-between; align-items: center; }
+        nav a { color: white; text-decoration: none; margin-left: 20px; font-weight: bold; }
+        nav a:hover { text-decoration: underline; }
+        .container { max-width: 900px; margin: 20px auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        h1 { color: #003366; }
+        .announcement { background: #e6f2ff; padding: 20px; border-radius: 8px; margin-bottom: 20px; border-left: 5px solid #00509e; }
+        .announcement h3 { color: #003366; margin-top: 0; }
+        .date { font-size: 12px; color: #666; font-style: italic; }
+    </style>
+</head>
+<body>
+
+    <nav>
+        <div><strong>e-Barangay</strong></div>
+        <div>
+            <a href="/">Home</a>
+            <a href="{% url 'announcement_list' %}">Announcements</a>
+            {% if user.is_authenticated %}
+                <a href="{% url 'resident_dashboard' %}">My Dashboard</a>
+                <a href="/admin/">Admin Panel</a>
+            {% else %}
+                <a href="{% url 'login' %}">Resident Login</a>
+                <a href="{% url 'register' %}">Register</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    <div class="container">
+        <h1>Barangay Announcements</h1>
+        
+        {% for announcement in announcements %}
+        <div class="announcement">
+            <h3>{{ announcement.title }}</h3>
+            <p class="date">Posted on: {{ announcement.date_posted|date:"M d, Y" }}</p>
+            <p>{{ announcement.content }}</p>
+        </div>
+        {% empty %}
+        <p>No announcements have been posted yet.</p>
+        {% endfor %}
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resident Dashboard - e-Barangay</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .bg-barangay { background-color: #003366 !important; }
+        .text-barangay { color: #003366 !important; }
+        .card-header-barangay { background-color: #e6f2ff; color: #003366; font-weight: bold; }
+        .btn-barangay { background-color: #00509e; color: white; border: none; }
+        .btn-barangay:hover { background-color: #003366; color: white; }
+    </style>
+</head>
+<body class="bg-light">
+
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark bg-barangay shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="/">🏛️ e-Barangay</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="{% url 'announcement_list' %}">Announcements</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="{% url 'resident_dashboard' %}">My Dashboard</a></li>
+                    <li class="nav-item">
+                        <form method="post" action="{% url 'logout' %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link nav-link d-inline" style="text-decoration:none;">Logout</button>
+                        </form>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container my-5">
+        <h1 class="text-barangay fw-bold mb-4">
+            {% if resident_profile %}
+                Welcome, {{ resident_profile.first_name }} {{ resident_profile.last_name }}!
+            {% else %}
+                Welcome, {{ user.username }}!
+            {% endif %}
+        </h1>
+        
+        <div class="row g-4">
+            <!-- Column 1: Resident Info -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header card-header-barangay">Your Resident Information</div>
+                    <div class="card-body">
+                        {% if resident_profile %}
+                            <p class="mb-1"><strong>Name:</strong> {{ resident_profile.first_name }} {{ resident_profile.last_name }}</p>
+                            <p class="mb-1"><strong>Age:</strong> {{ resident_profile.age }}</p>
+                            <p class="mb-1"><strong>Address:</strong> {{ resident_profile.address }}</p>
+                            <p class="mb-1"><strong>Contact:</strong> {{ resident_profile.contact_number }}</p>
+                            <hr>
+                        {% endif %}
+                        <p class="mb-1"><strong>Username:</strong> {{ user.username }}</p>
+                        <p class="mb-0"><strong>Email:</strong> {{ user.email }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Column 2: Document Services -->
+            <div class="col-md-8">
+                <div class="card shadow-sm border-0 h-100">
+                    <div class="card-header card-header-barangay">Available Document Services</div>
+                    <div class="card-body">
+                        <p>You can request the following documents from the Barangay Hall:</p>
+                        <a href="{% url 'request_document' %}" class="btn btn-barangay">+ Request a New Document</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- My Requests Table -->
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header card-header-barangay">My Document Requests</div>
+            <div class="card-body">
+                {% if my_requests %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr><th>Document Type</th><th>Status</th><th>Date Requested</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for req in my_requests %}
+                                <tr>
+                                    <td>{{ req.document_type }}</td>
+                                    <td>
+                                        {% if req.status == 'Approved' or req.status == 'Completed' %}
+                                            <span class="badge bg-success">{{ req.status }}</span>
+                                        {% elif req.status == 'Rejected' %}
+                                            <span class="badge bg-danger">{{ req.status }}</span>
+                                        {% elif req.status == 'Ready for Pickup' %}
+                                            <span class="badge bg-info text-dark">{{ req.status }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">{{ req.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ req.date_requested|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No pending requests found.</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Complaints Table -->
+        <div class="card shadow-sm border-0 mt-4">
+            <div class="card-header card-header-barangay">Complaints and Concerns</div>
+            <div class="card-body">
+                <p>If you have an issue to report, you can submit a complaint here:</p>
+                <a href="{% url 'submit_complaint' %}" class="btn btn-barangay mb-3">+ Submit a Complaint</a>
+                
+                {% if my_complaints %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr><th>Subject</th><th>Status</th><th>Date Submitted</th></tr>
+                            </thead>
+                            <tbody>
+                                {% for c in my_complaints %}
+                                <tr>
+                                    <td>{{ c.subject }}</td>
+                                    <td>
+                                        {% if c.status == 'Resolved' %}
+                                            <span class="badge bg-success">{{ c.status }}</span>
+                                        {% elif c.status == 'In Progress' %}
+                                            <span class="badge bg-info text-dark">{{ c.status }}</span>
+                                        {% else %}
+                                            <span class="badge bg-warning text-dark">{{ c.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ c.date_submitted|date:"M d, Y" }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No complaints submitted.</p>
+                {% endif %}
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bootstrap 5 JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
