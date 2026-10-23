@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-+y#v7!e&z@x1q2w3e4r5t6y7u8i9o0p'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['jeyanne02042006.pythonanywhere.com', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -62,6 +62,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+'residents.context_processors.notifications',
             ],
         },
     },
@@ -128,4 +129,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Redirect users to the homepage after logging in
 LOGIN_REDIRECT_URL = 'home'
-LOGIN_URL = 'welcome'
+LOGIN_URL = "welcome"
+STATIC_ROOT = BASE_DIR / "staticfiles"

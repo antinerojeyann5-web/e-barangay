@@ -1,10 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from .models import Resident, DocumentRequest, Announcement, Complaint, Guide
+from .models import Resident, DocumentRequest, Announcement, Complaint, Guide, Notification
 from .forms import ResidentRegisterForm, DocumentRequestForm, ComplaintForm
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+from django.contrib.auth.models import User
 
-# NEW: Welcome Page (shown first to visitors)
 def welcome(request):
     return render(request, 'welcome.html')
 
@@ -27,6 +27,13 @@ def add_resident(request):
         address = request.POST.get('address')
         contact_number = request.POST.get('contact_number')
         Resident.objects.create(first_name=first_name, last_name=last_name, age=age, address=address, contact_number=contact_number)
+        
+        admins = User.objects.filter(is_staff=True)
+        for admin in admins:
+            Notification.objects.create(
+                user=admin,
+                message=f"Bag-ong residente gi-dugang: {first_name} {last_name}."
+            )
         return redirect('home')
     return render(request, 'add_resident.html')
 
@@ -51,7 +58,14 @@ def register(request):
     if request.method == 'POST':
         form = ResidentRegisterForm(request.POST)
         if form.is_valid():
-            form.save()
+            user = form.save()
+            
+            admins = User.objects.filter(is_staff=True)
+            for admin in admins:
+                Notification.objects.create(
+                    user=admin,
+                    message=f"Bag-ong user nag-register: {user.username}."
+                )
             return redirect('login')
     else:
         form = ResidentRegisterForm()
@@ -73,6 +87,13 @@ def request_document(request):
             doc_request = form.save(commit=False)
             doc_request.user = request.user
             doc_request.save()
+            
+            admins = User.objects.filter(is_staff=True)
+            for admin in admins:
+                Notification.objects.create(
+                    user=admin,
+                    message=f"Bag-ong request: {request.user.username} nag-request og {doc_request.document_type}."
+                )
             return redirect('resident_dashboard')
     else:
         form = DocumentRequestForm()
@@ -86,6 +107,13 @@ def submit_complaint(request):
             complaint = form.save(commit=False)
             complaint.user = request.user
             complaint.save()
+            
+            admins = User.objects.filter(is_staff=True)
+            for admin in admins:
+                Notification.objects.create(
+                    user=admin,
+                    message=f"Bag-ong reklamo: {request.user.username} nag-sumite bahin sa '{complaint.subject}'."
+                )
             return redirect('resident_dashboard')
     else:
         form = ComplaintForm()
@@ -98,3 +126,9 @@ def announcement_list(request):
 def guide_list(request):
     guides = Guide.objects.all().order_by('title')
     return render(request, 'guide.html', {'guides': guides})
+
+@login_required
+def view_notifications(request):
+    notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+    notifications.update(is_read=True) 
+    return render(request, 'notifications.html', {'notifications': notifications})
